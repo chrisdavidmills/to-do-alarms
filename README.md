@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 to-do-notifications
 ===================
 
@@ -24,3 +25,9 @@ To do:
 5. ...?
 
 
+=======
+to-do-alarms
+============
+
+Enhanced version of the to-do app, which stores to-do items via IndexedDB, and then aims to provide notifications when to-do item deadlines are up, via the Alarm API.
+>>>>>>> 8438d8c535e4aeca07198427e4b44ce0a1e7c602
