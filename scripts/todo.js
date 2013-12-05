@@ -37,6 +37,9 @@ window.onload = function() {
 
   // Let us open our database
   var request = window.indexedDB.open("toDoList", 4);
+   
+  // Gecko-only IndexedDB temp storage option:
+  // var request = window.indexedDB.open("toDoList", {version: 4, storage: "temporary"});
 
   // these two event handlers act on the database being opened successfully, or not
   request.onerror = function(event) {
@@ -46,7 +49,7 @@ window.onload = function() {
   request.onsuccess = function(event) {
     note.innerHTML += '<li>Database initialised.</li>';
     
-    // store the result of grabbing all the data from the database in the db variable. This is used a lot below
+    // store the result of opening the database in the db variable. This is used a lot below
     db = request.result;
     
     // Run the displayData() function to populate the task list with all the to-do list data already in the IDB
@@ -111,7 +114,7 @@ window.onload = function() {
           
           if(cursor.value.notified == "yes") {
             listItem.style.textDecoration = "line-through";
-            listItem.style.color = "rgba(255,0,0,0.7)";
+            listItem.style.color = "rgba(255,0,0,0.5)";
           }
 
           // put the item item inside the task list
@@ -134,9 +137,9 @@ window.onload = function() {
         // if there are no more cursor items to iterate through, say so, and exit the function 
         } else {
           note.innerHTML += '<li>Entries all displayed.</li>';
+        }
       }
     }
-  }
   
   // give the form submit button an event listener so that when the form is submitted the addData() function is run
   taskForm.addEventListener('submit',addData,false);
@@ -169,7 +172,7 @@ window.onload = function() {
         note.innerHTML += '<li>Transaction not opened due to error. Duplicate items not allowed.</li>';
       };
 
-      // create an object store on the transaction
+      // call an object store that's already been added to the database
       var objectStore = transaction.objectStore("toDoList");
       // add our newItem object to the object store
       var request = objectStore.add(newItem[0]);        
@@ -177,6 +180,36 @@ window.onload = function() {
           
           // report the success of our new item going into the database
           note.innerHTML += '<li>New item added to database.</li>';
+
+          //build a date object out of the user-provided time and date information from the form submission
+          var myAlarmDate  = new Date(month.value + " " + day.value + ", " + year.value + " " + hours.value + ":" + minutes.value + ":00");
+
+          // The data object can contain any arbitrary data you want to pass to the alarm. Here I'm passing the name of the task
+          var data = {
+            task: title.value
+          }
+
+          // The "ignoreTimezone" string makes the alarm ignore timezones and always go off at the same time wherever you are
+          var request = navigator.mozAlarms.add(myAlarmDate, "ignoreTimezone", data);
+
+          request.onsuccess = function () {
+            console.log("Alarm sucessfully scheduled");
+          };
+
+          request.onerror = function () { 
+            console.log("An error occurred: " + this.error.name);
+          };
+
+          var listAlarmRequest = navigator.mozAlarms.getAll();
+
+          listAlarmRequest.onsuccess = function () {
+            this.result.forEach(function (alarm) {
+              console.log('Id: ' + alarm.id);
+              console.log('date: ' + alarm.date);
+              console.log('respectTimezone: ' + alarm.respectTimezone);
+              console.log('data: ' + JSON.stringify(alarm.data));
+            });
+          };
           
           // clear the form, ready for adding the next entry
           title.value = '';
@@ -210,159 +243,4 @@ window.onload = function() {
     };
     
   }
-  
-  // this function checks whether the deadline for each task is up or not, and responds appropriately
-  function checkDeadlines() {
-    
-    // grab the time and date right now 
-    var now = new Date();
-    
-    // from the now variable, store the current minutes, hours, day of the month (getDate is needed for this, as getDay 
-    // returns the day of the week, 1-7), month, year (getFullYear needed; getYear is deprecated, and returns a weird value
-    // that is not much use to anyone!) and seconds
-    var minuteCheck = now.getMinutes();
-    var hourCheck = now.getHours();
-    var dayCheck = now.getDate();
-    var monthCheck = now.getMonth();
-    var yearCheck = now.getFullYear();
-     
-    // again, open a transaction then a cursor to iterate through all the data items in the IDB   
-    var objectStore = db.transaction(['toDoList'], "readwrite").objectStore('toDoList');
-    objectStore.openCursor().onsuccess = function(event) {
-      var cursor = event.target.result;
-        if(cursor) {
-        
-        // convert the month names we have installed in the IDB into a month number that JavaScript will understand. 
-        // The JavaScript date object creates month values as a number between 0 and 11.
-        switch(cursor.value.month) {
-          case "January":
-            var monthNumber = 0;
-            break;
-          case "February":
-            var monthNumber = 1;
-            break;
-          case "March":
-            var monthNumber = 2;
-            break;
-          case "April":
-            var monthNumber = 3;
-            break;
-          case "May":
-            var monthNumber = 4;
-            break;
-          case "June":
-            var monthNumber = 5;
-            break;
-          case "July":
-            var monthNumber = 6;
-            break;
-          case "August":
-            var monthNumber = 7;
-            break;
-          case "September":
-            var monthNumber = 8;
-            break;
-          case "October":
-            var monthNumber = 9;
-            break;
-          case "November":
-            var monthNumber = 10;
-            break;
-          case "December":
-            var monthNumber = 11;
-            break;
-          default:
-          alert('Incorrect month entered in database.');
-        }
-          // check if the current hours, minutes, day, month and year values match the stored values for each task in the IDB.
-          // The + operator in this case converts numbers with leading zeros into their non leading zero equivalents, so e.g.
-          // 09 -> 9. This is needed because JS date number values never have leading zeros, but our data might.
-          // The secondsCheck = 0 check is so that you don't get duplicate notifications for the same task. The notification
-          // will only appear when the seconds is 0, meaning that you won't get more than one notification for each task
-          if(+(cursor.value.hours) == hourCheck && +(cursor.value.minutes) == minuteCheck && +(cursor.value.day) == dayCheck && monthNumber == monthCheck && cursor.value.year == yearCheck && cursor.value.notified == "no") {
-            
-            // If the numbers all do match, run the createNotification() function to create a system notification
-            createNotification(cursor.value.taskTitle);
-          }
-          
-          // move on and perform the same deadline check on the next cursor item
-          cursor.continue();
-        }
-        
-    }
-    
-  }
-  
-  // function for creating the notification
-  function createNotification(title) {
-
-    // Let's check if the browser supports notifications
-    if (!"Notification" in window) {
-      console.log("This browser does not support notifications.");
-    }
-
-    // Let's check if the user is okay to get some notification
-    else if (Notification.permission === "granted") {
-      // If it's okay let's create a notification
-      
-      var img = '/to-do-notifications/img/icon-128.png';
-      var text = 'HEY! Your task "' + title + '" is now overdue.';
-      var notification = new Notification('To do list', { body: text, icon: img });
-      
-      window.navigator.vibrate(500);
-    }
-
-    // Otherwise, we need to ask the user for permission
-    // Note, Chrome does not implement the permission static property
-    // So we have to check for NOT 'denied' instead of 'default'
-    else if (Notification.permission !== 'denied') {
-      Notification.requestPermission(function (permission) {
-
-        // Whatever the user answers, we make sure Chrome stores the information
-        if(!('permission' in Notification)) {
-          Notification.permission = permission;
-        }
-
-        // If the user is okay, let's create a notification
-        if (permission === "granted") {
-          var img = '/to-do-notifications/img/icon-128.png';
-          var text = 'HEY! Your task "' + title + '" is now overdue.';
-          var notification = new Notification('To do list', { body: text, icon: img });
-          
-          window.navigator.vibrate(500);
-        }
-      });
-    }
-
-    // At last, if the user already denied any notification, and you 
-    // want to be respectful there is no need to bother him any more.
-
-    // now we need to update the value of notified to "yes" in this particular data object, so the
-    // notification won't be set off on it again
-
-    // first open up a tranaction as usual
-    var objectStore = db.transaction(['toDoList'], "readwrite").objectStore('toDoList');
-
-    // get the to-do list object that has this title as it's title
-    var request = objectStore.get(title);
-
-    request.onsuccess = function() {
-      // grab the data object returned as the result
-      var data = request.result;
-      
-      // update the notified value in the object to "yes"
-      data.notified = "yes";
-      
-      // create another request that inserts the item back into the database
-      var requestUpdate = objectStore.put(data);
-      
-      // when this new request succeeds, run the displayData() function again to update the display
-      requestUpdate.onsuccess = function() {
-        displayData();
-      }
-    }
-  }
-  
-  // using a setInterval to run the checkDeadlines() function every second
-  setInterval(checkDeadlines, 1000);
 }
