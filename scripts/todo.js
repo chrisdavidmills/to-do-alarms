@@ -180,24 +180,29 @@ window.onload = function() {
           
           // report the success of our new item going into the database
           note.innerHTML += '<li>New item added to database.</li>';
+          
+          // test whether the Alarm API is supported
+          if(navigator.mozAlarms) {
+            //build a date object out of the user-provided time and date information from the form submission
+            var myAlarmDate  = new Date(month.value + " " + day.value + ", " + year.value + " " + hours.value + ":" + minutes.value + ":00");
 
-          //build a date object out of the user-provided time and date information from the form submission
-          var myAlarmDate  = new Date(month.value + " " + day.value + ", " + year.value + " " + hours.value + ":" + minutes.value + ":00");
+            // The data object can contain any arbitrary data you want to pass to the alarm. Here I'm passing the name of the task
+            var data = {
+              task: title.value
+            }
 
-          // The data object can contain any arbitrary data you want to pass to the alarm. Here I'm passing the name of the task
-          var data = {
-            task: title.value
-          }
+            // The "ignoreTimezone" string makes the alarm ignore timezones and always go off at the same time wherever you are
+            var request = navigator.mozAlarms.add(myAlarmDate, "ignoreTimezone", data);
 
-          // The "ignoreTimezone" string makes the alarm ignore timezones and always go off at the same time wherever you are
-          var request = navigator.mozAlarms.add(myAlarmDate, "ignoreTimezone", data);
+            request.onsuccess = function () {
+              console.log("Alarm sucessfully scheduled");
+            };
 
-          request.onsuccess = function () {
-            console.log("Alarm sucessfully scheduled");
-          };
-
-          request.onerror = function () { 
-            console.log("An error occurred: " + this.error.name);
+            request.onerror = function () { 
+              console.log("An error occurred: " + this.error.name);
+            };
+          } else {
+            note.innerHTML += '<li>Alarm not created - your browser does not support the Alarm API.</li>';
           };
 
           
