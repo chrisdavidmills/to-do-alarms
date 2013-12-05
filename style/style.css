@@ -9,32 +9,28 @@ html {
   height: 100%;
   font-size: 10px;
   font-family: 'Donegal One', serif;
-  background: #FFEE00;
+  background: #FFD073;
 }
 
 body {
   width: 50rem;
   position: relative;
-  background: #FFEE00;
+  background: #FFD073;
   margin: 0 auto;
-  border-left: 2px solid #FF6400;
-  border-right: 2px solid #FF6400;
+  border-left: 5px solid #BF8F30;
+  border-right: 5px solid #BF8F30;
 }
 
 h1, h2 {
   text-align: center;
-  background: #FF6400;
+  background: #BF8F30;
   font-family: 'Lily Script One', cursive;
 }
 
 h1 {
   font-size: 6rem;
   margin: 0;
-  background: -webkit-linear-gradient(top, #FF9640, #FF6400);
-  background: -moz-linear-gradient(top, #FF9640, #FF6400);
-  background: -ms-linear-gradient(top, #FF9640, #FF6400);
-  background: linear-gradient(top, #FF9640, #FF6400);
-  text-shadow: 1px 1px 1px #FF6400, 2px 2px 1px black;
+  text-shadow: 1px 1px 1px #BF8F30, 2px 2px 1px black;
 }
 
 h2 {
@@ -47,9 +43,9 @@ h2 {
   position: relative;
   height: 6rem;
   width: 100%;
-  background: #FF6400;
-  border-top: 2px solid #FF6400;
-  border-bottom: 2px solid #FF6400;
+  background: #BF8F30;
+  border-top: 5px solid #BF8F30;
+  border-bottom: 5px solid #BF8F30;
 }
 
 #install, input[type="submit"] {
@@ -74,7 +70,7 @@ h2 {
   margin: 0;
   position: relative;
   padding: 0.3rem;
-  background: #FFEE00;
+  background: #FFD073;
   position: absolute;
   top: 0rem;
   left: 0rem;
@@ -91,7 +87,7 @@ h2 {
 /* || new item form styling */
 
 .form-box {
-  background: #FF6400;
+  background: #BF8F30;
   width: 85%;
   padding: 1rem;
   margin: 2rem auto;
@@ -151,10 +147,12 @@ form div input[type="submit"] {
 /* || tasks box */
 
 .task-box {
+  background: #BF8F30;
   width: 85%;
   padding: 1rem;
   margin: 2rem auto;
   font-size: 1.8rem;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.7);
 }
 
 .task-box ul {
@@ -164,12 +162,9 @@ form div input[type="submit"] {
 
 .task-box li {
   list-style-type: none;
-  padding: 1rem;
-  border-bottom: 2px solid #FF6400;
-}
-
-.task-box li:last-child {
-  border-bottom: none;
+  background: #FFD073;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .task-box li:last-child {
@@ -185,23 +180,9 @@ form div input[type="submit"] {
              1px 1px 1px black;
 }
 
-/* setting cursor for interactive controls */
-
-button, input[type="submit"], select {
-  cursor: pointer;
-}
-
-/* media query for small screens */
-
 @media (max-width: 32rem) {
   body {
-    width: 100%;
-    border-left: none;
-    border-right: none;
-  }
-  
-  form div {
-    clear: both;
+    width: 45rem;
   }
   
   form .full-width {
@@ -219,13 +200,7 @@ button, input[type="submit"], select {
   }
   
   form div label {
-    width: 36%;
-    padding-left: 1rem;
-  }
-  
-  form input, form select, form label {
-    line-height: 2.5rem;
-    font-size: 2rem;
+    width: 25%;
   }
 
   form .full-width input {
@@ -233,11 +208,11 @@ button, input[type="submit"], select {
   }
 
   form .half-width input {
-    width: 50%;
+    width: 30%;
   }
 
   form .third-width select {
-    width: 50%;
+    width: 30%;
   }
   
   #install {

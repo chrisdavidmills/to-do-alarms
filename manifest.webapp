@@ -1,35 +1,36 @@
 {
   "version": "0.1",
-  "name": "To-do list Alarms",
-  "description": "Store to-do items on your device, and be notified via the Alarm API when deadlines are up.",
-  "launch_path": "/to-do-alarms/index.html",
+  "name": "Open Web App",
+  "description": "Store to-do items on your device, and be notified when the deadlines are up.",
+  "launch_path": "/app-template/index.html",
   "icons": {
-    "128": "/to-do-alarms/img/icon-128.png"
+    "128": "/app-template/app-icons/icon-128.png"
   },
   "developer": {
     "name": "Chris Mills",
-    "url": "http://chrisdavidmills.github.io/to-do-alarms/"
+    "url": "http://yourawesomeapp.com"
   },
   "locales": {
     "es": {
       "description": "Su nueva aplicación impresionante Open Web",
       "developer": {
-        "url": "http://chrisdavidmills.github.io/to-do-alarms/"
+        "url": "http://yourawesomeapp.com"
       }
     },
     "it": {
       "description": "Il vostro nuovo fantastico Open Web App",
       "developer": {
-        "url": "http://chrisdavidmills.github.io/to-do-alarms/"
+        "url": "http://yourawesomeapp.com"
       }
     }
   },
+  "default_locale": "en",
   "permissions": {
+    "desktop-notification":{
+    
+    }, 
     "alarms": {
       "description": "Required to schedule alarm notifications"
     }
-  },
-  "messages": [
-      { "alarm": "/to-do-alarms/index.html" }
-  ]
+  }
 }
