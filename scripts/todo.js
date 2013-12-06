@@ -157,6 +157,7 @@ window.onload = function() {
       return;
     } else {
       var newAlarmId = 0;
+      alert(newAlarmId);
       // test whether the Alarm API is supported - if so, we'll set a system alarm
       if(navigator.mozAlarms) {
         //build a date object out of the user-provided time and date information from the form submission
@@ -174,8 +175,10 @@ window.onload = function() {
           console.log("Alarm sucessfully scheduled");
 
           var alarmRequest = navigator.mozAlarms.getAll();
-          newAlarmId = alarmRequest.result[alarmRequest.length-1].id;
-          document.alert(newAlarmId);
+          alarmRequest.onsuccess = function() {
+            newAlarmId = this.result[(alarmRequest.length)-1].id;
+            alert(newAlarmId);
+          }
         };
 
         request.onerror = function () { 
@@ -186,6 +189,7 @@ window.onload = function() {
       };
       
       // grab the values entered into the form fields and store them in an object ready for being inserted into the IDB
+      alert(newAlarmId);
       var newItem = [
         { taskTitle: title.value, hours: hours.value, minutes: minutes.value, day: day.value, month: month.value, year: year.value, notified: "no", alarmId: newAlarmId }
       ];
