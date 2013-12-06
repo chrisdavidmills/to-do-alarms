@@ -176,7 +176,7 @@ window.onload = function() {
 
           var alarmRequest = navigator.mozAlarms.getAll();
           alarmRequest.onsuccess = function() {
-            newAlarmId = this.result[(alarmRequest.length)-1].id;
+            newAlarmId = this.result[(this.result.length)-1].id;
             alert(newAlarmId);
           }
         };
@@ -237,7 +237,9 @@ window.onload = function() {
     var dataAlarm = event.target.getAttribute('data-alarmId');
 
     //delete the alarm associated with this task
-    navigator.mozAlarms.remove(dataAlarm);
+    if(navigator.mozAlarms) {
+      navigator.mozAlarms.remove(dataAlarm);
+    }
     
     // delete the parent of the button, which is the list item, so it no longer is displayed
     event.target.parentNode.parentNode.removeChild(event.target.parentNode);
