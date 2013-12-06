@@ -7,7 +7,7 @@ var db;
 
 // create a blank instance of the object that is used to transfer data into the IDB. This is mainly for reference
 var newItem = [
-      { taskTitle: "", hours: 0, minutes: 0, day: 0, month: "", year: 0, notified: "no" }
+      { taskTitle: "", hours: 0, minutes: 0, day: 0, month: "", year: 0, notified: "no", alarmId: 0 }
     ];
 
 // all the variables we need for the app    
@@ -36,10 +36,10 @@ window.onload = function() {
 
 
   // Let us open our database
-  var request = window.indexedDB.open("toDoList", 4);
+  var request = window.indexedDB.open("toDoListAlarms", 1);
    
   // Gecko-only IndexedDB temp storage option:
-  // var request = window.indexedDB.open("toDoList", {version: 4, storage: "temporary"});
+  // var request = window.indexedDB.open("toDoListAlarms", {version: 1, storage: "temporary"});
 
   // these two event handlers act on the database being opened successfully, or not
   request.onerror = function(event) {
@@ -69,7 +69,7 @@ window.onload = function() {
 
     // Create an objectStore for this database
     
-    var objectStore = db.createObjectStore("toDoList", { keyPath: "taskTitle" });
+    var objectStore = db.createObjectStore("toDoListAlarms", { keyPath: "taskTitle" });
     
     // define what data items the objectStore will contain
     
@@ -80,6 +80,7 @@ window.onload = function() {
     objectStore.createIndex("year", "year", { unique: false });
 
     objectStore.createIndex("notified", "notified", { unique: false });
+    objectStore.createIndex("alarmId", "alarmId", { unique: false})
     
     note.innerHTML += '<li>Object store created.</li>';
   };
@@ -90,7 +91,7 @@ window.onload = function() {
     taskList.innerHTML = "";
   
     // Open our object store and then get a cursor list of all the different data items in the IDB to iterate through
-    var objectStore = db.transaction('toDoList').objectStore('toDoList');
+    var objectStore = db.transaction('toDoListAlarms').objectStore('toDoListAlarms');
     objectStore.openCursor().onsuccess = function(event) {
       var cursor = event.target.result;
         // if there is still another cursor to go, keep runing this code
@@ -127,6 +128,7 @@ window.onload = function() {
           deleteButton.innerHTML = 'X';
           // here we are setting a data attribute on our delete button to say what task we want deleted if it is clicked! 
           deleteButton.setAttribute('data-task', cursor.value.taskTitle);
+          deleteButton.setAttribute('data-alarmId', cursor.value.alarmId);
           deleteButton.onclick = function(event) {
             deleteItem(event);
           }
@@ -154,14 +156,42 @@ window.onload = function() {
       note.innerHTML += '<li>Data not submitted — form incomplete.</li>';
       return;
     } else {
+      var newAlarmId = 0;
+      // test whether the Alarm API is supported - if so, we'll set a system alarm
+      if(navigator.mozAlarms) {
+        //build a date object out of the user-provided time and date information from the form submission
+        var myAlarmDate  = new Date(month.value + " " + day.value + ", " + year.value + " " + hours.value + ":" + minutes.value + ":00");
+
+        // The data object can contain any arbitrary data you want to pass to the alarm. Here I'm passing the name of the task
+        var data = {
+          task: title.value
+        }
+
+        // The "ignoreTimezone" string makes the alarm ignore timezones and always go off at the same time wherever you are
+        var request = navigator.mozAlarms.add(myAlarmDate, "ignoreTimezone", data);
+
+        request.onsuccess = function () {
+          console.log("Alarm sucessfully scheduled");
+
+          var alarmRequest = navigator.mozAlarms.getAll();
+          newAlarmId = alarmRequest.result[alarmRequest.length-1].id;
+          document.alert(newAlarmId);
+        };
+
+        request.onerror = function () { 
+          console.log("An error occurred: " + this.error.name);
+        };
+      } else {
+        note.innerHTML += '<li>Alarm not created - your browser does not support the Alarm API.</li>';
+      };
       
       // grab the values entered into the form fields and store them in an object ready for being inserted into the IDB
       var newItem = [
-        { taskTitle: title.value, hours: hours.value, minutes: minutes.value, day: day.value, month: month.value, year: year.value, notified: "no" }
+        { taskTitle: title.value, hours: hours.value, minutes: minutes.value, day: day.value, month: month.value, year: year.value, notified: "no", alarmId: newAlarmId }
       ];
 
       // open a read/write db transaction, ready for adding the data
-      var transaction = db.transaction(["toDoList"], "readwrite");
+      var transaction = db.transaction(["toDoListAlarms"], "readwrite");
     
       // report on the success of opening the transaction
       transaction.oncomplete = function(event) {
@@ -173,38 +203,13 @@ window.onload = function() {
       };
 
       // call an object store that's already been added to the database
-      var objectStore = transaction.objectStore("toDoList");
+      var objectStore = transaction.objectStore("toDoListAlarms");
       // add our newItem object to the object store
       var request = objectStore.add(newItem[0]);        
         request.onsuccess = function(event) {
           
           // report the success of our new item going into the database
           note.innerHTML += '<li>New item added to database.</li>';
-          
-          // test whether the Alarm API is supported
-          if(navigator.mozAlarms) {
-            //build a date object out of the user-provided time and date information from the form submission
-            var myAlarmDate  = new Date(month.value + " " + day.value + ", " + year.value + " " + hours.value + ":" + minutes.value + ":00");
-
-            // The data object can contain any arbitrary data you want to pass to the alarm. Here I'm passing the name of the task
-            var data = {
-              task: title.value
-            }
-
-            // The "ignoreTimezone" string makes the alarm ignore timezones and always go off at the same time wherever you are
-            var request = navigator.mozAlarms.add(myAlarmDate, "ignoreTimezone", data);
-
-            request.onsuccess = function () {
-              console.log("Alarm sucessfully scheduled");
-            };
-
-            request.onerror = function () { 
-              console.log("An error occurred: " + this.error.name);
-            };
-          } else {
-            note.innerHTML += '<li>Alarm not created - your browser does not support the Alarm API.</li>';
-          };
-
           
           // clear the form, ready for adding the next entry
           title.value = '';
@@ -223,14 +228,18 @@ window.onload = function() {
     };
   
   function deleteItem(event) {
-    // retrieve the name of the task we want to delete 
+    // retrieve the name and the alarm ID of the task we want to delete
     var dataTask = event.target.getAttribute('data-task');
+    var dataAlarm = event.target.getAttribute('data-alarmId');
+
+    //delete the alarm associated with this task
+    navigator.mozAlarms.remove(dataAlarm);
     
     // delete the parent of the button, which is the list item, so it no longer is displayed
     event.target.parentNode.parentNode.removeChild(event.target.parentNode);
     
     // open a database transaction and delete the task, finding it by the name we retrieved above
-    var request = db.transaction(["toDoList"], "readwrite").objectStore("toDoList").delete(dataTask);
+    var request = db.transaction(["toDoListAlarms"], "readwrite").objectStore("toDoListAlarms").delete(dataTask);
     
     // report that the data item has been deleted
     request.onsuccess = function(event) {
@@ -255,7 +264,7 @@ window.onload = function() {
     var yearCheck = now.getFullYear();
      
     // again, open a transaction then a cursor to iterate through all the data items in the IDB   
-    var objectStore = db.transaction(['toDoList'], "readwrite").objectStore('toDoList');
+    var objectStore = db.transaction(['toDoListAlarms'], "readwrite").objectStore('toDoListAlarms');
     objectStore.openCursor().onsuccess = function(event) {
       var cursor = event.target.result;
         if(cursor) {
@@ -328,7 +337,7 @@ window.onload = function() {
     // notification won't be set off on it again
 
     // first open up a transaction as usual
-    var objectStore = db.transaction(['toDoList'], "readwrite").objectStore('toDoList');
+    var objectStore = db.transaction(['toDoListAlarms'], "readwrite").objectStore('toDoListAlarms');
 
     // get the to-do list object that has this title as it's title
     var request = objectStore.get(title);

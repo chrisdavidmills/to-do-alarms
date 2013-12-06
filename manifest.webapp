@@ -1,10 +1,10 @@
 {
   "version": "0.1",
-  "name": "Open Web App",
-  "description": "Store to-do items on your device, and be notified when the deadlines are up.",
-  "launch_path": "/app-template/index.html",
+  "name": "To-do alarms",
+  "description": "Store to-do items on your device, and be notified when the deadlines are up via alarm API",
+  "launch_path": "/to-do-alarms/index.html",
   "icons": {
-    "128": "/app-template/app-icons/icon-128.png"
+    "128": "to-do-alarms/img/icon-128.png"
   },
   "developer": {
     "name": "Chris Mills",
@@ -25,10 +25,7 @@
     }
   },
   "default_locale": "en",
-  "permissions": {
-    "desktop-notification":{
-    
-    }, 
+  "permissions": { 
     "alarms": {
       "description": "Required to schedule alarm notifications"
     }
