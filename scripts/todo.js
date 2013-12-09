@@ -251,90 +251,31 @@ window.onload = function() {
     };
     
   }
-  
-  // this function checks whether the deadline for each task is up or not, and responds appropriately
-  function checkDeadlines() {
-    
-    // grab the time and date right now 
-    var now = new Date();
-    
-    // from the now variable, store the current minutes, hours, day of the month (getDate is needed for this, as getDay 
-    // returns the day of the week, 1-7), month, year (getFullYear needed; getYear is deprecated, and returns a weird value
-    // that is not much use to anyone!) and seconds
-    var minuteCheck = now.getMinutes();
-    var hourCheck = now.getHours();
-    var dayCheck = now.getDate();
-    var monthCheck = now.getMonth();
-    var yearCheck = now.getFullYear();
-     
-    // again, open a transaction then a cursor to iterate through all the data items in the IDB   
-    var objectStore = db.transaction(['toDoListAlarms'], "readwrite").objectStore('toDoListAlarms');
-    objectStore.openCursor().onsuccess = function(event) {
-      var cursor = event.target.result;
-        if(cursor) {
-        
-        // convert the month names we have installed in the IDB into a month number that JavaScript will understand. 
-        // The JavaScript date object creates month values as a number between 0 and 11.
-        switch(cursor.value.month) {
-          case "January":
-            var monthNumber = 0;
-            break;
-          case "February":
-            var monthNumber = 1;
-            break;
-          case "March":
-            var monthNumber = 2;
-            break;
-          case "April":
-            var monthNumber = 3;
-            break;
-          case "May":
-            var monthNumber = 4;
-            break;
-          case "June":
-            var monthNumber = 5;
-            break;
-          case "July":
-            var monthNumber = 6;
-            break;
-          case "August":
-            var monthNumber = 7;
-            break;
-          case "September":
-            var monthNumber = 8;
-            break;
-          case "October":
-            var monthNumber = 9;
-            break;
-          case "November":
-            var monthNumber = 10;
-            break;
-          case "December":
-            var monthNumber = 11;
-            break;
-          default:
-          alert('Incorrect month entered in database.');
-        }
-          // check if the current hours, minutes, day, month and year values match the stored values for each task in the IDB.
-          // The + operator in this case converts numbers with leading zeros into their non leading zero equivalents, so e.g.
-          // 09 -> 9. This is needed because JS date number values never have leading zeros, but our data might.
-          // The secondsCheck = 0 check is so that you don't get duplicate notifications for the same task. The notification
-          // will only appear when the seconds is 0, meaning that you won't get more than one notification for each task
-          if(+(cursor.value.hours) == hourCheck && +(cursor.value.minutes) == minuteCheck && +(cursor.value.day) == dayCheck && monthNumber == monthCheck && cursor.value.year == yearCheck && cursor.value.notified == "no") {
-            
-            // If the numbers all do match, run the createNotification() function to create a system notification
-            updateNotified(cursor.value.taskTitle);
-          }
-          
-          // move on and perform the same deadline check on the next cursor item
-          cursor.continue();
-        }
-        
-    }
-    
+
+  // This will handle an alarm set by this application
+  if(navigator.mozSetMessageHandler) {
+    navigator.mozSetMessageHandler("alarm", function (alarm) {
+      // only launch a notification if the Alarm is of the right type for this app 
+      if(alarm.data.task) {
+        // Create a notification when the alarm is due
+        new Notification("Your task " + alarm.data.task + " is now due!");
+        updateNotified(alarm.data.task);
+      }
+    });
+
+    // This should open the application when the user touches the notification
+    // but it doesn't seem to work yet.
+    navigator.mozSetMessageHandler("notification", function (message) {
+      if (!message.clicked) { return; }
+
+      navigator.mozApps.getSelf().onsuccess = function (evt) {
+        var app = this.result;
+        app.launch();
+      };
+    })
   }
-  
-  // function for creating the notification
+
+  // function for updating the notified status of the task, in the IndexedDB
   function updateNotified(title) {
 
     // Here we need to update the value of notified to "yes" in this particular data object, so the
@@ -363,30 +304,4 @@ window.onload = function() {
     }
   }
 
-
-
-  // This will handle an alarm set by this application
-  if(navigator.mozSetMessageHandler) {
-    navigator.mozSetMessageHandler("alarm", function (alarm) {
-      // only launch a notification if the Alarm is of the right type for this app 
-      if(alarm.data.task) {
-        // Create a notification when the alarm is due
-        new Notification("Your task " + alarm.data.task + " is now due!");
-      }
-    });
-
-    // This should open the application when the user touches the notification
-    // but it doesn't seem to work yet.
-    navigator.mozSetMessageHandler("notification", function (message) {
-      if (!message.clicked) { return; }
-
-      navigator.mozApps.getSelf().onsuccess = function (evt) {
-        var app = this.result;
-        app.launch();
-      };
-    })
-  }
-
-  // using a setInterval to run the checkDeadlines() function every second
-  setInterval(checkDeadlines, 1000);
 }
