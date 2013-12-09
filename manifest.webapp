@@ -26,8 +26,15 @@
   },
   "default_locale": "en",
   "permissions": { 
+    "desktop-notification" : {
+      "description": "Required to schedule notifications"
+    },
     "alarms": {
-      "description": "Required to schedule alarm notifications"
+      "description": "Required to schedule alarms"
     }
-  }
+  },
+  "messages": [
+    { "alarm": "/index.html" },
+    { "notification": "/index.html" }
+  ]
 }

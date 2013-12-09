@@ -6,6 +6,8 @@ var note = document.getElementById('notifications');
 var db;
 
 // create a blank instance of the object that is used to transfer data into the IDB. This is mainly for reference
+
+var newAlarmId = 0;
 var newItem = [
       { taskTitle: "", hours: 0, minutes: 0, day: 0, month: "", year: 0, notified: "no", alarmId: 0 }
     ];
@@ -156,8 +158,6 @@ window.onload = function() {
       note.innerHTML += '<li>Data not submitted — form incomplete.</li>';
       return;
     } else {
-      var newAlarmId = 0;
-      alert(newAlarmId);
       // test whether the Alarm API is supported - if so, we'll set a system alarm
       if(navigator.mozAlarms) {
         //build a date object out of the user-provided time and date information from the form submission
@@ -177,7 +177,6 @@ window.onload = function() {
           var alarmRequest = navigator.mozAlarms.getAll();
           alarmRequest.onsuccess = function() {
             newAlarmId = this.result[(this.result.length)-1].id;
-            alert(newAlarmId);
           }
         };
 
@@ -189,7 +188,6 @@ window.onload = function() {
       };
       
       // grab the values entered into the form fields and store them in an object ready for being inserted into the IDB
-      alert(newAlarmId);
       var newItem = [
         { taskTitle: title.value, hours: hours.value, minutes: minutes.value, day: day.value, month: month.value, year: year.value, notified: "no", alarmId: newAlarmId }
       ];
@@ -364,7 +362,31 @@ window.onload = function() {
       }
     }
   }
-  
+
+
+
+  // This will handle an alarm set by this application
+  if(navigator.mozSetMessageHandler) {
+    navigator.mozSetMessageHandler("alarm", function (alarm) {
+      // only launch a notification if the Alarm is of the right type for this app 
+      if(alarm.data.task) {
+        // Create a notification when the alarm is due
+        new Notification("Your task " + alarm.data.task + " is now due!");
+      }
+    });
+
+    // This should open the application when the user touches the notification
+    // but it doesn't seem to work yet.
+    navigator.mozSetMessageHandler("notification", function (message) {
+      if (!message.clicked) { return; }
+
+      navigator.mozApps.getSelf().onsuccess = function (evt) {
+        var app = this.result;
+        app.launch();
+      };
+    })
+  }
+
   // using a setInterval to run the checkDeadlines() function every second
   setInterval(checkDeadlines, 1000);
 }
