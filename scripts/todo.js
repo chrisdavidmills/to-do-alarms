@@ -266,7 +266,7 @@ window.onload = function() {
     });
 
     // This should open the application when the user touches the notification
-    // but it doesn't seem to work yet.
+    // but it only works on later FxOS versions, e.g. 2.0/2.1
     navigator.mozSetMessageHandler("notification", function (message) {
       if (!message.clicked) { return; }
 
