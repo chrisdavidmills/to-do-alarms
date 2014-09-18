@@ -38,21 +38,21 @@ window.onload = function() {
 
 
   // Let us open our database
-  var request = window.indexedDB.open("toDoListAlarms", 1);
+  var DBOpenRequest = window.indexedDB.open("toDoListAlarms", 1);
    
   // Gecko-only IndexedDB temp storage option:
   // var request = window.indexedDB.open("toDoListAlarms", {version: 1, storage: "temporary"});
 
   // these two event handlers act on the database being opened successfully, or not
-  request.onerror = function(event) {
+  DBOpenRequest.onerror = function(event) {
     note.innerHTML += '<li>Error loading database.</li>';
   };
   
-  request.onsuccess = function(event) {
+  DBOpenRequest.onsuccess = function(event) {
     note.innerHTML += '<li>Database initialised.</li>';
     
     // store the result of opening the database in the db variable. This is used a lot below
-    db = request.result;
+    db = DBOpenRequest.result;
     
     // Run the displayData() function to populate the task list with all the to-do list data already in the IDB
     displayData();
@@ -62,7 +62,7 @@ window.onload = function() {
   // Either one has not been created before, or a new version number has been submitted via the
   // window.indexedDB.open line above
   //it is only implemented in recent browsers
-  request.onupgradeneeded = function(event) { 
+  DBOpenRequest.onupgradeneeded = function(event) { 
     var db = event.target.result;
     
     db.onerror = function(event) {
@@ -169,18 +169,18 @@ window.onload = function() {
         }
 
         // The "ignoreTimezone" string makes the alarm ignore timezones and always go off at the same time wherever you are
-        var request = navigator.mozAlarms.add(myAlarmDate, "ignoreTimezone", data);
+        var alarmRequest = navigator.mozAlarms.add(myAlarmDate, "ignoreTimezone", data);
 
-        request.onsuccess = function () {
+        alarmRequest.onsuccess = function () {
           console.log("Alarm sucessfully scheduled");
 
-          var alarmRequest = navigator.mozAlarms.getAll();
-          alarmRequest.onsuccess = function() {
+          var allAlarmsRequest = navigator.mozAlarms.getAll();
+          allAlarmsRequest.onsuccess = function() {
             newAlarmId = this.result[(this.result.length)-1].id;
           }
         };
 
-        request.onerror = function () { 
+        alarmRequest.onerror = function () { 
           console.log("An error occurred: " + this.error.name);
         };
       } else {
@@ -197,7 +197,8 @@ window.onload = function() {
     
       // report on the success of opening the transaction
       transaction.oncomplete = function(event) {
-        note.innerHTML += '<li>Transaction opened for task addition.</li>';
+        note.innerHTML += '<li>Transaction completed: database modification finished.</li>';
+        console.log('transaction.oncomplete');
       };
 
       transaction.onerror = function(event) {
@@ -207,8 +208,9 @@ window.onload = function() {
       // call an object store that's already been added to the database
       var objectStore = transaction.objectStore("toDoListAlarms");
       // add our newItem object to the object store
-      var request = objectStore.add(newItem[0]);        
-        request.onsuccess = function(event) {
+      var objectStoreRequest = objectStore.add(newItem[0]);        
+        objectStoreRequest.onsuccess = function(event) {
+          console.log('objectStore add.onsuccess');
           
           // report the success of our new item going into the database
           note.innerHTML += '<li>New item added to database.</li>';
@@ -243,10 +245,10 @@ window.onload = function() {
     event.target.parentNode.parentNode.removeChild(event.target.parentNode);
     
     // open a database transaction and delete the task, finding it by the name we retrieved above
-    var request = db.transaction(["toDoListAlarms"], "readwrite").objectStore("toDoListAlarms").delete(dataTask);
+    var deleteTaskRequest = db.transaction(["toDoListAlarms"], "readwrite").objectStore("toDoListAlarms").delete(dataTask);
     
     // report that the data item has been deleted
-    request.onsuccess = function(event) {
+    deleteTaskRequest.onsuccess = function(event) {
       note.innerHTML += '<li>Task \"' + dataTask + '\" deleted.</li>';
     };
     
@@ -285,20 +287,20 @@ window.onload = function() {
     var objectStore = db.transaction(['toDoListAlarms'], "readwrite").objectStore('toDoListAlarms');
 
     // get the to-do list object that has this title as it's title
-    var request = objectStore.get(title);
+    var ObjectStoreTitleRequest = objectStore.get(title);
 
-    request.onsuccess = function() {
+    ObjectStoreTitleRequest.onsuccess = function() {
       // grab the data object returned as the result
-      var data = request.result;
+      var data = ObjectStoreTitleRequest.result;
       
       // update the notified value in the object to "yes"
       data.notified = "yes";
       
       // create another request that inserts the item back into the database
-      var requestUpdate = objectStore.put(data);
+      var updateTitleRequest = objectStore.put(data);
       
       // when this new request succeeds, run the displayData() function again to update the display
-      requestUpdate.onsuccess = function() {
+      updateTitleRequest.onsuccess = function() {
         displayData();
       }
     }
