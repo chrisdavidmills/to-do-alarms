@@ -2,9 +2,9 @@
   "version": "0.1",
   "name": "To-do alarms",
   "description": "Store to-do items on your device, and be notified when the deadlines are up via alarm API",
-  "launch_path": "to-do-alarms/index.html",
+  "launch_path": "/to-do-alarms/index.html",
   "icons": {
-    "128": "to-do-alarms/img/icon-128.png"
+    "128": "/to-do-alarms/img/icon-128.png"
   },
   "developer": {
     "name": "Chris Mills",
@@ -34,7 +34,7 @@
     }
   },
   "messages": [
-    { "alarm": "to-do-alarms/index.html" },
-    { "notification": "to-do-alarms/index.html" }
+    { "alarm": "/to-do-alarms/index.html" },
+    { "notification": "/to-do-alarms/index.html" }
   ]
 }
